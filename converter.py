@@ -9,8 +9,9 @@ class Converter:
         self.flags = '0' * (16 - len(int_flags) + 2) + str(int_flags)[2:]
         self.is_answer = self.flags[0]
         self.name, self.q_type, position = self.parse_question()
+        self.info = None
         if self.is_answer:
-            self.parse_body(position)
+            self.info = self.parse_body(position)
 
     def parse_header(self):
         header = struct.unpack("!6H", self.data[0:12])
@@ -55,6 +56,7 @@ class Converter:
         authority_list, end2 = self.parse_rr(end1, 4)
         print("ADDITIONAL")
         additional_list, end3 = self.parse_rr(end2, 5)
+        return answer_list + authority_list + additional_list
 
     def parse_rr(self, start, number):
         offset = start

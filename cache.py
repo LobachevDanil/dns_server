@@ -28,6 +28,6 @@ class Cache:
                 return True, value[0]
         return False, None
 
-    def put(self, name, type, item, ttl):
+    def put(self, name, type, ttl, item):
         self.data[(name, type)] = (item, time.time(), ttl)
         print("Add key", (name, type))
