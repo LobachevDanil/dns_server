@@ -13,12 +13,20 @@ class Server:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
                 sock.bind(('192.168.1.153', 53))
                 data, addr = sock.recvfrom(1024)
-                print(addr)
                 self.print_packet(data)
                 c = Converter(data)
-                print(c.header)
-                print(c.flags)
-                print(c.is_answer)
+                is_contain, value = self.cache.try_get_item((c.name, c.q_type))
+                if is_contain:
+                    print("magic", value)
+                else:
+                    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as dns:
+                        dns.bind(("192.168.1.153", 55555))
+                        dns.sendto(data, ("8.8.8.8", 53))
+                        out = dns.recvfrom(1024)[0]
+
+                    sock.sendto(out, addr)
+                    c2 = Converter(out)
+                    self.cache.put('d', 'NS', 'test', 10000)
 
     def print_packet(self, data):
         for i in range(len(data)):

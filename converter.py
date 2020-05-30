@@ -8,35 +8,38 @@ class Converter:
         int_flags = bin(self.header[1])
         self.flags = '0' * (16 - len(int_flags) + 2) + str(int_flags)[2:]
         self.is_answer = self.flags[0]
-        self.parse_question()
+        self.name, self.q_type, position = self.parse_question()
 
     def parse_header(self):
         header = struct.unpack("!6H", self.data[0:12])
         return header
 
     def parse_question(self):
-        tail = self.data[12:]
-        name_list = []
-        position = 0
-        while tail[position] != 0:
-            length = tail[position]
-            name_list.append(tail[position + 1:position + length + 1])
-            position += length + 1
-            # print(position)
-        # print(name_list)
-        position += 1
-        q_name = ".".join([i.decode('ascii') for i in name_list])
-        q_type, q_class = struct.unpack("!HH", tail[position: position + 4])
-        print(q_name, q_type, q_class)
+        name, end = self.parse_name2(12)
+        q_type, q_class = struct.unpack("!HH", self.data[end: end + 4])
+        return name, q_type, end + 4
 
-    def parse_name(self, start):
-        tail = self.data[start:]
+    def parse_name2(self, start):
         name_list = []
-        position = 0
-        while tail[position] != 0:
-            length = tail[position]
-            name_list.append(tail[position + 1:position + length + 1])
-            position += length + 1
-        position += 1
+        position = start
+        end = start
+        flag = False
+        while True:
+            if self.data[position] > 63:
+                if not flag:
+                    end = position + 2
+                    flag = True
+                position = ((self.data[position] - 192) << 8) + self.data[position + 1]
+                continue
+            else:
+                length = self.data[position]
+                if length == 0:
+                    if not flag:
+                        end = position + 1
+                    break
+                position += 1
+                name_list.append(self.data[position: position + length])
+                position += length
         name = ".".join([i.decode('ascii') for i in name_list])
-        return name
+        print(name_list)
+        return name, end
