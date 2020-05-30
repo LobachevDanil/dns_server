@@ -61,6 +61,7 @@ class Converter:
     def parse_rr(self, start, number):
         offset = start
         rr_list = []
+        result = []
         for i in range(self.header[number]):
             name, end = self.parse_name2(offset)
             # print(name, end)

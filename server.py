@@ -10,26 +10,36 @@ class Server:
 
     def start(self):
         while True:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                sock.bind(('192.168.1.153', 53))
-                data, addr = sock.recvfrom(1024)
-                # self.print_packet(data)
-                c = Converter(data)
-                is_contain, value = self.cache.try_get_item((c.name, c.q_type))
-                if is_contain:
-                    print("magic", value)
-                else:
-                    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as dns:
-                        dns.bind(("192.168.1.153", 55555))
-                        dns.sendto(data, ("ns1.e1.ru", 53))
-                        out = dns.recvfrom(1024)[0]
-                        # self.print_packet(out)
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                    sock.bind(('192.168.1.153', 53))
+                    data, addr = sock.recvfrom(1024)
+                    # self.print_packet(data)
+                    c = Converter(data)
+                    is_contain, value = self.cache.try_get_item((c.name, c.q_type))
+                    if is_contain:
+                        print("magic", value)
+                    else:
+                        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as dns:
+                            dns.bind(("192.168.1.153", 55555))
+                            dns.sendto(data, ("ns1.e1.ru", 53))
+                            out = dns.recvfrom(1024)[0]
+                            # self.print_packet(out)
 
-                    sock.sendto(out, addr)
-                    c2 = Converter(out)
-                    for info in c2.info:
-                        self.cache.put(*info)
-            print("-" * 30)
+                        sock.sendto(out, addr)
+                        c2 = Converter(out)
+                        print(c2.info)
+                        for info in c2.info:
+                            self.cache.put(*info)
+                print("-" * 30)
+            except Exception as e:
+                print("Was exception")
+                print(e)
+            else:
+                self.stop()
+
+    def stop(self):
+        self.cache.save()
 
     def print_packet(self, data):
         i = 1
