@@ -9,6 +9,7 @@ class Converter:
         self.flags = '0' * (16 - len(int_flags) + 2) + str(int_flags)[2:]
         self.is_answer = self.flags[0]
         self.name, self.q_type, position = self.parse_question()
+        self.question_len = position
         self.info = None
         if self.is_answer:
             self.info = self.parse_body(position)
@@ -20,13 +21,13 @@ class Converter:
     def parse_question(self):
         name, end = self.parse_name2(12)
         q_type, q_class = struct.unpack("!HH", self.data[end: end + 4])
-        print("QUESTION", name, q_type, q_class, end + 4)
+        information = "Queries: name {0}, type {1}, class {2}".format(name, q_type, q_class)
+        print(information)
         return name, q_type, end + 4
 
     def parse_name2(self, start):
         name_list = []
         position = start
-        # print("NAME_START", start)
         end = start
         flag = False
         while True:
@@ -50,38 +51,73 @@ class Converter:
         return name, end
 
     def parse_body(self, start):
-        print("ANSWERS")
         answer_list, end1 = self.parse_rr(start, 3)
-        print("AUTHORITY")
         authority_list, end2 = self.parse_rr(end1, 4)
-        print("ADDITIONAL")
         additional_list, end3 = self.parse_rr(end2, 5)
+        if len(answer_list) != 0:
+            print("Answers")
+            for e in answer_list:
+                self.print_rr(e[0], e[1], e[3])
+        if len(authority_list) != 0:
+            print("Authority")
+            for e in authority_list:
+                self.print_rr(e[0], e[1], e[3])
+        if len(additional_list) != 0:
+            print("Additional")
+            for e in additional_list:
+                self.print_rr(e[0], e[1], e[3])
+
         return answer_list + authority_list + additional_list
+
+    def print_rr(self, name, type, value):
+        information = "\tname {0}, type {1},  value{2}".format(name, type, value)
+        print(information)
 
     def parse_rr(self, start, number):
         offset = start
         rr_list = []
-        result = []
         for i in range(self.header[number]):
             name, end = self.parse_name2(offset)
-            # print(name, end)
             offset = end
             r_type, r_class, r_ttl, rd_length = struct.unpack("!2HIH", self.data[offset: offset + 10])
-            print(
-                "\tname {0}, type {1}, class {2}, ttl {3}, rd_len {4}".format(name, r_type, r_class, r_ttl, rd_length))
 
             offset += 10
             if r_type == 1:
                 ip = struct.unpack("!4B", self.data[offset: offset + 4])
-                print("\t\tIP", ip)
                 offset += 4
                 rr_list.append((name, r_type, r_ttl, ip))
             elif r_type == 2:
                 dns_server_name, dns_name_end = self.parse_name2(offset)
-                print("\t\tDNS_NAME", dns_server_name, dns_name_end)
                 offset = dns_name_end
                 rr_list.append((name, r_type, r_ttl, dns_server_name))
             else:
                 offset += rd_length
 
         return rr_list, offset
+
+    def make_answer(self, ttl, value):
+        header = list(self.header[:12])
+        header[1] = 2 ** 15
+        header[3] = 1
+        question = self.data[12: self.question_len]
+        name = self.data[12: self.question_len - 4]
+        if self.q_type == 1:
+            item = struct.pack("!4B", *value)
+            length = 4
+        if self.q_type == 2:
+            item = self.convert_name(value)
+            length = len(item)
+
+        tail = struct.pack("!HHIH", self.q_type, 1, ttl, length)
+        all = struct.pack("!6H", *header) + question + name + tail + item
+        return all
+
+    def convert_name(self, name):
+        octets = name.split(".")
+        result = []
+        for o in octets:
+            result.append(len(o))
+            for l in o:
+                result.append(ord(l))
+        result.append(0)
+        return struct.pack("!" + str(len(result)) + "B", *result)

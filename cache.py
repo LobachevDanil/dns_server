@@ -5,13 +5,13 @@ import time
 
 class Cache:
     def __init__(self):
-        self.data = dict()
         self.filename = 'cache'
-        self.load()
+        self.data = self.load()
 
     def save(self):
         with open(self.filename, 'wb') as f:
             pickle.dump(self.data, f)
+            print("Save cache")
 
     def load(self):
         if not os.path.exists(self.filename):
@@ -24,7 +24,7 @@ class Cache:
                     need_delete.append(k)
             for k in need_delete:
                 data.pop(k)
-        print(data)
+            print("Load cache", data)
         return data
 
     def try_get_item(self, key):
@@ -32,7 +32,7 @@ class Cache:
             value = self.data[key]
             if value[1] + value[2] >= time.time():
                 print("Give", key, "->", value[0])
-                return True, value[0]
+                return True, value
         return False, None
 
     def put(self, name, type, ttl, item):

@@ -14,27 +14,27 @@ class Server:
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
                     sock.bind(('192.168.1.153', 53))
                     data, addr = sock.recvfrom(1024)
-                    # self.print_packet(data)
-                    c = Converter(data)
-                    is_contain, value = self.cache.try_get_item((c.name, c.q_type))
+                    parse_request = Converter(data)
+                    is_contain, value = self.cache.try_get_item((parse_request.name, parse_request.q_type))
                     if is_contain:
                         print("magic", value)
+                        p = parse_request.make_answer(value[2], value[0])
+                        sock.sendto(p, addr)
                     else:
                         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as dns:
                             dns.bind(("192.168.1.153", 55555))
                             dns.sendto(data, ("ns1.e1.ru", 53))
                             out = dns.recvfrom(1024)[0]
-                            # self.print_packet(out)
 
                         sock.sendto(out, addr)
-                        c2 = Converter(out)
-                        print(c2.info)
-                        for info in c2.info:
+                        parse_answer = Converter(out)
+                        for info in parse_answer.info:
                             self.cache.put(*info)
                 print("-" * 30)
             except Exception as e:
                 print("Was exception")
                 print(e)
+                raise
             else:
                 self.stop()
 
