@@ -1,0 +1,37 @@
+Load cache {}
+Queries: name 153.1.168.192.in-addr.arpa, type 12, class 1
+Queries: name 153.1.168.192.in-addr.arpa, type 12, class 1
+------------------------------
+Save cache
+Queries: name e1.ru, type 1, class 1
+Queries: name e1.ru, type 1, class 1
+Answers
+	name e1.ru, type 1,  value(195, 19, 220, 12)
+Authority
+	name e1.ru, type 2,  valuens1.ngs.ru
+	name e1.ru, type 2,  valuens.hsdrn.ru
+Add key ('e1.ru', 1)
+Add key ('e1.ru', 2)
+Add key ('e1.ru', 2)
+------------------------------
+Save cache
+Queries: name e1.ru, type 28, class 1
+Queries: name e1.ru, type 28, class 1
+------------------------------
+Save cache
+Queries: name 153.1.168.192.in-addr.arpa, type 12, class 1
+Queries: name 153.1.168.192.in-addr.arpa, type 12, class 1
+------------------------------
+Save cache
+Queries: name e1.ru, type 2, class 1
+Give ('e1.ru', 2) -> ns.hsdrn.ru
+------------------------------
+Save cache
+Queries: name 153.1.168.192.in-addr.arpa, type 12, class 1
+Queries: name 153.1.168.192.in-addr.arpa, type 12, class 1
+------------------------------
+Save cache
+Queries: name e1.ru, type 1, class 1
+Give ('e1.ru', 1) -> (195, 19, 220, 12)
+------------------------------
+Save cache

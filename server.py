@@ -17,7 +17,6 @@ class Server:
                     parse_request = Converter(data)
                     is_contain, value = self.cache.try_get_item((parse_request.name, parse_request.q_type))
                     if is_contain:
-                        print("magic", value)
                         p = parse_request.make_answer(value[2], value[0])
                         sock.sendto(p, addr)
                     else:
